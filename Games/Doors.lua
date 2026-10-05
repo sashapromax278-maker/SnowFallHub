@@ -7,7 +7,14 @@ local Camera = workspace.CurrentCamera
 local Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
 local Window = Rayfield:CreateWindow({Name = "SnowFall | Doors", LoadingTitle = "Doors", LoadingSubtitle = "module"})
 
-local cfg = {esp = true, items = true, coins = true, speed = false, speedVal = 25}
+local cfg = {
+    esp = false,
+    items = false,
+    coins = false,
+    speed = false,
+    godmode = false,
+    speedVal = 25
+}
 
 local drawings = {}
 local function clear()
@@ -71,22 +78,47 @@ local function coins()
 end
 
 local function speed()
-    if not cfg.speed then return end
     local char = LocalPlayer.Character
-    if char and char:FindFirstChildOfClass("Humanoid") then
-        char:FindFirstChildOfClass("Humanoid").WalkSpeed = cfg.speedVal
+    if not char then return end
+    local hum = char:FindFirstChildOfClass("Humanoid")
+    if hum then
+        hum.WalkSpeed = cfg.speed and cfg.speedVal or 16
     end
 end
 
-RunService.RenderStepped:Connect(function()
+local function godmode()
+    local char = LocalPlayer.Character
+    if not char then return end
+    local hum = char:FindFirstChildOfClass("Humanoid")
+    if not hum then return end
+    if cfg.godmode then
+        hum.MaxHealth = math.huge
+        hum.Health = math.huge
+        hum.NameDisplayDistance = 0
+        for _, part in pairs(char:GetDescendants()) do
+            if part:IsA("BasePart") then
+                part.CanCollide = false
+            end
+        end
+    end
+end
+
+LocalPlayer.CharacterAdded:Connect(function()
+    task.wait(1)
+    godmode()
+end)
+
+RunService.Heartbeat:Connect(function()
     if cfg.esp or cfg.items then esp() end
     coins()
     speed()
+    godmode()
 end)
 
 local T = Window:CreateTab("Doors", 4483362458)
-T:CreateToggle({Name = "ESP сущностей", CurrentValue = true, Callback = function(v) cfg.esp = v end})
-T:CreateToggle({Name = "Подсветка предметов", CurrentValue = true, Callback = function(v) cfg.items = v end})
-T:CreateToggle({Name = "Авто-монеты", CurrentValue = true, Callback = function(v) cfg.coins = v end})
+T:CreateToggle({Name = "ESP сущностей", CurrentValue = false, Callback = function(v) cfg.esp = v end})
+T:CreateToggle({Name = "Подсветка предметов", CurrentValue = false, Callback = function(v) cfg.items = v end})
+T:CreateToggle({Name = "Авто-монеты", CurrentValue = false, Callback = function(v) cfg.coins = v end})
 T:CreateToggle({Name = "Speed", CurrentValue = false, Callback = function(v) cfg.speed = v end})
 T:CreateSlider({Name = "Speed value", Range = {16,100}, Increment = 1, CurrentValue = 25, Callback = function(v) cfg.speedVal = v end})
+T:CreateToggle({Name = "Godmode (режим бога)", CurrentValue = false, Callback = function(v) cfg.godmode = v end})
