@@ -4,7 +4,7 @@ local Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
 local Window = Rayfield:CreateWindow({
     Name = "SnowFall Hub",
     LoadingTitle = "SnowFall Hub",
-    LoadingSubtitle = "by Colin",
+    LoadingSubtitle = "by SnowFall",
     ConfigurationSaving = { Enabled = true, FolderName = "SnowFallHub", FileName = "config" }
 })
 
