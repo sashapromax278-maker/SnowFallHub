@@ -1,6 +1,7 @@
 -- SnowFall Hub - Build a Boat For Treasure module
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
+local UserInputService = game:GetService("UserInputService")
 local LocalPlayer = Players.LocalPlayer
 local Camera = workspace.CurrentCamera
 
@@ -19,8 +20,12 @@ local cfg = {
     fly = false,
     noclip = false,
     infJump = false,
+    fullbright = false,
+    antiAfk = false,
     sailSpeed = 50,
-    flySpeed = 50
+    flySpeed = 50,
+    flyUp = false,
+    flyDown = false
 }
 
 local drawings = {}
@@ -33,6 +38,7 @@ local function getChar()
     return LocalPlayer.Character
 end
 
+-- АВТО-ПЛАВАНИЕ
 local function autoSail()
     if not cfg.autoSail then return end
     local char = getChar()
@@ -55,6 +61,7 @@ local function autoSail()
     end
 end
 
+-- АВТО-СБОР
 local function autoCollect()
     if not cfg.autoCollect then return end
     local char = getChar()
@@ -73,6 +80,7 @@ local function autoCollect()
     end
 end
 
+-- АВТО-РЕСПАВН
 local function autoRespawn()
     if not cfg.autoRespawn then return end
     local char = getChar()
@@ -81,6 +89,7 @@ local function autoRespawn()
     end
 end
 
+-- АВТО-УЛУЧШЕНИЕ
 local function autoUpgrade()
     if not cfg.autoUpgrade then return end
     local gui = LocalPlayer:FindFirstChild("PlayerGui")
@@ -95,6 +104,7 @@ local function autoUpgrade()
     end
 end
 
+-- АВТО-ПОКУПКА
 local function autoBuy()
     if not cfg.autoBuy then return end
     local gui = LocalPlayer:FindFirstChild("PlayerGui")
@@ -109,6 +119,7 @@ local function autoBuy()
     end
 end
 
+-- ESP
 local function esp()
     clear()
     local char = getChar()
@@ -151,6 +162,7 @@ local function esp()
     end
 end
 
+-- SPEED ЛОДКИ
 local function speedBoat()
     if not cfg.speedBoat then return end
     local boat = workspace:FindFirstChild("Boat")
@@ -166,21 +178,34 @@ local function speedBoat()
     end
 end
 
+-- FLY (мобильный, с кнопками)
+local flyBV = nil
 local function fly()
-    if not cfg.fly then return end
     local char = getChar()
     if not char then return end
     local hrp = char:FindFirstChild("HumanoidRootPart")
     if not hrp then return end
+    if not cfg.fly then
+        if flyBV then flyBV:Destroy() flyBV = nil end
+        return
+    end
+    if not flyBV then
+        flyBV = Instance.new("BodyVelocity")
+        flyBV.MaxForce = Vector3.new(math.huge, math.huge, math.huge)
+        flyBV.Parent = hrp
+    end
     local move = Vector3.new(0, 0, 0)
-    local cam = workspace.CurrentCamera.CFrame
-    if game:GetService("UserInputService"):IsKeyDown(Enum.KeyCode.W) then move = move + cam.LookVector end
-    if game:GetService("UserInputService"):IsKeyDown(Enum.KeyCode.S) then move = move - cam.LookVector end
-    if game:GetService("UserInputService"):IsKeyDown(Enum.KeyCode.A) then move = move - cam.RightVector end
-    if game:GetService("UserInputService"):IsKeyDown(Enum.KeyCode.D) then move = move + cam.RightVector end
-    hrp.Velocity = move * cfg.flySpeed
+    local cam = Camera.CFrame
+    if UserInputService:IsKeyDown(Enum.KeyCode.W) then move = move + cam.LookVector end
+    if UserInputService:IsKeyDown(Enum.KeyCode.S) then move = move - cam.LookVector end
+    if UserInputService:IsKeyDown(Enum.KeyCode.A) then move = move - cam.RightVector end
+    if UserInputService:IsKeyDown(Enum.KeyCode.D) then move = move + cam.RightVector end
+    if cfg.flyUp or UserInputService:IsKeyDown(Enum.KeyCode.Space) then move = move + Vector3.new(0, 1, 0) end
+    if cfg.flyDown or UserInputService:IsKeyDown(Enum.KeyCode.LeftShift) then move = move - Vector3.new(0, 1, 0) end
+    flyBV.Velocity = move * cfg.flySpeed
 end
 
+-- NOCLIP
 local function noclip()
     if not cfg.noclip then return end
     local char = getChar()
@@ -190,6 +215,7 @@ local function noclip()
     end
 end
 
+-- INF JUMP
 local function infJump()
     if not cfg.infJump then return end
     local char = getChar()
@@ -197,6 +223,25 @@ local function infJump()
     local hum = char:FindFirstChildOfClass("Humanoid")
     if hum then hum.JumpPower = 200 end
 end
+
+-- FULLBRIGHT
+local function fullbright()
+    if cfg.fullbright then
+        game:GetService("Lighting").Brightness = 3
+        game:GetService("Lighting").ClockTime = 12
+        game:GetService("Lighting").FogEnd = 100000
+        game:GetService("Lighting").GlobalShadows = false
+    end
+end
+
+-- ANTI-AFK
+LocalPlayer.Idled:Connect(function()
+    if cfg.antiAfk then
+        local vu = game:GetService("VirtualUser")
+        vu:CaptureController()
+        vu:ClickButton2(Vector2.new())
+    end
+end)
 
 RunService.Heartbeat:Connect(function()
     autoSail()
@@ -209,6 +254,7 @@ RunService.Heartbeat:Connect(function()
     fly()
     noclip()
     infJump()
+    fullbright()
 end)
 
 local T = Window:CreateTab("Build a Boat", 4483362458)
@@ -229,5 +275,9 @@ T:CreateToggle({Name = "Speed лодки", CurrentValue = false, Callback = func
 T:CreateSlider({Name = "Скорость лодки", Range = {10,200}, Increment = 5, CurrentValue = 50, Callback = function(v) cfg.sailSpeed = v end})
 T:CreateToggle({Name = "Fly", CurrentValue = false, Callback = function(v) cfg.fly = v end})
 T:CreateSlider({Name = "Скорость полёта", Range = {10,200}, Increment = 5, CurrentValue = 50, Callback = function(v) cfg.flySpeed = v end})
+T:CreateButton({Name = "Fly Вверх (держать)", Callback = function() cfg.flyUp = true task.wait(0.5) cfg.flyUp = false end})
+T:CreateButton({Name = "Fly Вниз (держать)", Callback = function() cfg.flyDown = true task.wait(0.5) cfg.flyDown = false end})
 T:CreateToggle({Name = "Noclip", CurrentValue = false, Callback = function(v) cfg.noclip = v end})
 T:CreateToggle({Name = "Infinite Jump", CurrentValue = false, Callback = function(v) cfg.infJump = v end})
+T:CreateToggle({Name = "Fullbright", CurrentValue = false, Callback = function(v) cfg.fullbright = v end})
+T:CreateToggle({Name = "Anti-AFK", CurrentValue = false, Callback = function(v) cfg.antiAfk = v end})
