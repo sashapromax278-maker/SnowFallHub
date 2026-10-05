@@ -29,7 +29,6 @@ MainTab:CreateButton({Name = "MM2", Callback = function() loadModule("MM2") end}
 MainTab:CreateButton({Name = "Steal a Brainrot", Callback = function() loadModule("StealABrainrot") end})
 MainTab:CreateButton({Name = "Ink Game", Callback = function() loadModule("InkGame") end})
 MainTab:CreateButton({Name = "Blade Ball", Callback = function() loadModule("BladeBall") end})
-MainTab:CreateButton({Name = "Arsenal", Callback = function() loadModule("Arsenal") end})
 MainTab:CreateButton({Name = "Grow a Garden", Callback = function() loadModule("GrowAGarden") end})
 
 MainTab:CreateSection("Универсальное")
